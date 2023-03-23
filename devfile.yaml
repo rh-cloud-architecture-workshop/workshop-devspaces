@@ -11,4 +11,3 @@ components:
       memoryRequest: 256Mi
       memoryLimit: 1G
       image: quay.io/devfile/universal-developer-image:ubi8-latest
-
