@@ -1,0 +1,1 @@
+Devspace configuration for Cloud Architecture Workshop
