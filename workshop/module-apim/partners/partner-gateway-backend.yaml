@@ -1,0 +1,10 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: globex-partner-gateway-backend
+spec:
+  name: "Globex Partner Gateway Backend"
+  systemName: "globex-partner-gateway-backend"
+  privateBaseURL: "<chang-me>"
+  providerAccountRef:
+    name: user1
