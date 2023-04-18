@@ -5,6 +5,6 @@ metadata:
 spec:
   name: "Globex Mobile Gateway Backend"
   systemName: "globex-mobile-gateway-backend"
-  privateBaseURL: "<change-me>"
+  privateBaseURL: "http://globex-mobile-gateway.globex-apim-user1.svc.cluster.local:8080"
   providerAccountRef:
-    name: user1-3scale-tenant-secret
+    name: 3scale-tenant-secret

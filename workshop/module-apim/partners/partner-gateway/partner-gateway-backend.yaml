@@ -5,6 +5,6 @@ metadata:
 spec:
   name: "Globex Partner Gateway Backend"
   systemName: "globex-partner-gateway-backend"
-  privateBaseURL: "<chang-me>"
+  privateBaseURL: "http://globex-partner-gateway.globex-apim-user1.svc.cluster.local:8080"
   providerAccountRef:
-    name: user1
+    name: 3scale-tenant-secret
