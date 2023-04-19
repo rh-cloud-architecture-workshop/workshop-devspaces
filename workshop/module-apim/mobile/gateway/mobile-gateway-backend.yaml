@@ -5,6 +5,16 @@ metadata:
 spec:
   name: "Globex Mobile Gateway Backend"
   systemName: "globex-mobile-gateway-backend"
-  privateBaseURL: "http://globex-mobile-gateway.globex-apim-user1.svc.cluster.local:8080"
+  privateBaseURL: "<replace-me>"
   providerAccountRef:
     name: 3scale-tenant-secret
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/"
+      increment: 1
+      metricMethodRef: hits
+  metrics:
+    hits:
+      description: Number of API hits
+      friendlyName: Hits
+      unit: "hit"
