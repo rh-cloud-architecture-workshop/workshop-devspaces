@@ -1,0 +1,37 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Product
+metadata:
+  name: globex-partner-gateway-product
+spec:
+  name: "globex-partner-gateway-product"
+  systemName: "globex-partner-gateway-product"
+  description: "Globex Partner Gateway Product"
+  deployment:
+    apicastHosted:
+      authentication:
+        oidc:
+          issuerType: "keycloak"
+          issuerEndpoint: "https://client-manager:<credentials>@<keycloak-url>/auth/realms/<realm-name>"
+          authenticationFlow:
+            standardFlowEnabled: false
+            implicitFlowEnabled: false
+            serviceAccountsEnabled: true
+            directAccessGrantsEnabled: false
+          jwtClaimWithClientID: "azp"
+          jwtClaimWithClientIDType: "plain"
+          credentials: "headers"
+  providerAccountRef:
+    name: 3scale-tenant-secret
+  applicationPlans:
+    basic:
+      name: "Globex Partner Basic Plan"
+      setupFee: "0"
+      published: true
+    premium:
+      name: "Globex Partner Premium Plan"
+      setupFee: "100"
+      published: true
+  backendUsages:
+    globex-partner-gateway-backend:
+      path: /
+    

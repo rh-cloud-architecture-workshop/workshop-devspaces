@@ -1,0 +1,20 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: Backend
+metadata:
+  name: globex-mobile-gateway-backend
+spec:
+  name: "Globex Mobile Gateway Backend"
+  systemName: "globex-mobile-gateway-backend"
+  privateBaseURL: "<replace-me>"
+  providerAccountRef:
+    name: 3scale-tenant-secret
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/"
+      increment: 1
+      metricMethodRef: hits
+  metrics:
+    hits:
+      description: Number of API hits
+      friendlyName: Hits
+      unit: "hit"

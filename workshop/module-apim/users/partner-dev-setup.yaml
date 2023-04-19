@@ -1,0 +1,54 @@
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperAccount
+metadata:
+  name: partner-developeraccount
+spec:
+  orgName: PartnerZ
+  providerAccountRef:
+    name: 3scale-tenant-secret
+
+---
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: partnerz.secret
+type: Opaque
+stringData:
+  password: openshift
+
+---
+
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperUser
+metadata:
+  name: june.partnerz
+spec:
+  username: june.partnerz
+  email: june@partnerz.com
+  passwordCredentialsRef:
+    name: partnerz.secret
+  role: admin
+  developerAccountRef:
+    name: partner-developeraccount
+  providerAccountRef:
+    name: 3scale-tenant-secret
+
+---
+
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperUser
+metadata:
+  name: jon.partnerz
+spec:
+  username: jon.partnerz
+  email: jon@partnerz.com
+  passwordCredentialsRef:
+    name: partnerz.secret
+  role: member
+  developerAccountRef:
+    name: partner-developeraccount
+  providerAccountRef:
+    name: 3scale-tenant-secret

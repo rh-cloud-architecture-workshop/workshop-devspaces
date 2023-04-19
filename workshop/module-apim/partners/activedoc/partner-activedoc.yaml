@@ -1,0 +1,14 @@
+kind: ActiveDoc
+apiVersion: capabilities.3scale.net/v1beta1
+metadata:
+  name: partner-gateway-activedoc
+spec:
+  activeDocOpenAPIRef:
+    secretRef:
+      name: partner-openapi-secret
+  published: true
+  name: partner-gateway-activedoc
+  providerAccountRef:
+    name: 3scale-tenant-secret
+  productSystemName: globex-partner-gateway-product
+  
