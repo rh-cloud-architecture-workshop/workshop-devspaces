@@ -1,0 +1,11 @@
+1. SSO Issuer URL
+
+
+2. SSO Token URL
+
+
+3. client_manager credentials from SSO
+
+
+4. OpenID URL for 3scale
+
