@@ -8,13 +8,13 @@ spec:
   privateBaseURL: "<replace-me>"
   providerAccountRef:
     name: 3scale-tenant-secret
-  mappingRules:
-    - httpMethod: GET
-      pattern: "/"
-      increment: 1
-      metricMethodRef: hits
   metrics:
     hits:
       description: Number of API hits
       friendlyName: Hits
       unit: "hit"
+  mappingRules:
+    - httpMethod: GET
+      pattern: "/"
+      increment: 1
+      metricMethodRef: hits
