@@ -3,9 +3,8 @@ apiVersion: capabilities.3scale.net/v1beta1
 metadata:
   name: mobile-gateway-activedoc
 spec:
-  activeDocOpenAPIRef:
-    secretRef:
-      name: mobile-openapi-secret
+  openapiRef:
+    url: "<replace-me>"
   published: true
   name: mobile-gateway-activedoc
   providerAccountRef:
