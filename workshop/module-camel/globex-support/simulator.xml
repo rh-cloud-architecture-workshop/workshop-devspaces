@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+	<!-- Write your routes here, for example: -->
+    <route id="callback">
+        <from uri="platform-http:/simulator"/>
+        <log message="simulator: ${body}"/>
+    </route>
+
+    <route id="call">
+        <from uri="timer:call?repeatCount=3&amp;period=2000"/>
+        <setBody>
+            <simple>
+{
+    "user":"Pamela",
+    "text":"please help (simulator) ${exchangeProperty.CamelTimerCounter}",
+    "sessionid":"sample-websocket-contextid"
+}
+            </simple>
+        </setBody>
+
+        <to uri="http://localhost:8080/support/message"/>
+
+        <!-- <log message="simulator: ${body}"/> -->
+    </route>
+
+</routes>

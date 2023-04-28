@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+
+    <route id="support-request-slack">
+        <!-- <from uri="amqp:topic:support?connectionFactory=#myFactory"/> -->
+        <from uri="amqp:topic:{{broker.amqp.topic.clients.slack}}{{slack.channel.id}}?connectionFactory=#myFactory"/>
+        <log message="new SLACK message: ${body}"/>
+        <to uri="direct:support-request"/>
+    </route>
+
+
+    <route id="support-request">
+        <!-- <from uri="amqp:topic:support?connectionFactory=#myFactory"/> -->
+        <from uri="direct:support-request"/>
+        <!-- <log message="new message: ${body}"/> -->
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setProperty name="in">
+            <simple>${body}</simple>
+        </setProperty>
+
+        <to uri="direct:cache-check"/>
+    </route>
+
+
+    <route id="cache-check">
+        <from uri="direct:cache-check"/>
+
+        <setProperty name="key">
+            <simple>${exchangeProperty.in.get(source).get(room)}</simple>
+        </setProperty>
+        <to uri="direct:cache-get"/>
+
+        <to uri="log:deb?showHeaders=true"/>
+        <!-- <to uri="infinispan-embedded:default"/> -->
+
+        <choice>
+            <when>
+                <simple>${body} == null</simple>
+                <log message="no CACHE entry"/>
+
+                <to uri="direct:discord-create"/>
+
+                <!-- prepare cache value -->
+                <setProperty name="cache">
+                    <simple>${exchangeProperty.in}</simple>
+                </setProperty>
+                <to uri="language:simple:${exchangeProperty.cache.put(target,${exchangeProperty.target} )}?transform=false"/>
+
+
+
+                <!-- use Slack key to cache value -->
+                <setProperty name="key">
+                    <simple>${exchangeProperty.in.get(source).get(room)}</simple>
+                </setProperty>
+                <setBody>
+                    <simple>${exchangeProperty.cache}</simple>
+                </setBody>
+<log message="key: ${exchangeProperty.key}"/>
+<log message="val: ${body}"/>
+                <to uri="direct:cache-put"/>
+
+                <!-- use Discord key to cache value -->
+                <setProperty name="key">
+                    <simple>${exchangeProperty.cache.get(target).get(room)}</simple>
+                </setProperty>
+                <setBody>
+                    <simple>${exchangeProperty.cache}</simple>
+                </setBody>
+<log message="key: ${exchangeProperty.key}"/>
+<log message="val: ${body}"/>
+                <to uri="direct:cache-put"/>
+
+            </when>
+            <otherwise>
+                <log message="got CACHE entry"/>
+                <setProperty name="cache">
+                    <simple>${body}</simple>
+                </setProperty>
+                <log message="cache: ${body}"/>
+            </otherwise>
+        </choice>
+
+        <setProperty name="discord-channel">
+            <simple>${exchangeProperty.cache.get(target).get(room)}</simple>
+        </setProperty>
+        <setBody>
+            <simple>${exchangeProperty.in.get(text)}</simple>
+        </setBody>
+        <to uri="direct:discord-push-message"/>
+    </route>
+
+    <route id="discord-create">
+        <from uri="direct:discord-create"/>
+        <removeHeaders pattern="*"/>
+        <setHeader name="Authorization">
+            <simple>Bot {{discord.token}}</simple>
+        </setHeader>
+        <setHeader name="Content-Type">
+            <simple>application/json</simple>
+        </setHeader>
+        <setProperty name="namespace">
+            <simple>${env.NAMESPACE}</simple>
+        </setProperty>
+        <setBody>
+<!--             <simple>{
+    "name": "${exchangeProperty.in.get(source).get(name)}-${exchangeProperty.in.get(source).get(room)}", 
+    "parent_id":"{{discord.guild.group}}", 
+    "type": 0
+}
+            </simple> -->
+            <simple>{
+    "name": "${exchangeProperty.in.get(source).get(name)}-${exchangeProperty.namespace.replace('globex-camel-','')}", 
+    "parent_id":"{{discord.guild.group}}", 
+    "type": 0
+}
+            </simple>
+        </setBody>
+        <to uri="https://discordapp.com/api/guilds/{{discord.guild.id}}/channels?connectionClose=true"/>
+        <log message="response: ${body}"/>
+        <to uri="log:discord-response?showAll=true"/>
+        <convertBodyTo type="String"/>
+
+        <to uri="jslt:classpath:cachetarget.jslt"/>
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setProperty name="target">
+            <simple>${body}</simple>
+        </setProperty>
+        <!-- 
+        <to uri="language:simple:${exchangeProperty.cache.put(target,${body} )}?transform=false"/>
+
+        <log message="new cache: ${exchangeProperty.cache}"/>
+ -->
+    </route>
+
+    <route id="discord-push-message">
+        <from uri="direct:discord-push-message"/>
+        <removeHeaders pattern="*"/>
+        <setHeader name="Authorization">
+            <simple>Bot {{discord.token}}</simple>
+        </setHeader>
+        <setHeader name="Content-Type">
+            <simple>application/json</simple>
+        </setHeader>
+
+<setProperty name="kafka-body">
+    <simple>${body}</simple>
+</setProperty>
+
+        <setBody>
+            <simple>{"content":"${body}"}</simple>
+        </setBody>
+        <toD uri="https://discordapp.com/api/channels/${exchangeProperty.discord-channel}/messages?connectionClose=true"/>
+        <!-- <toD uri="https://discordapp.com/api/channels/${exchangeProperty.discord-channel}/messages"/> -->
+        <log message="message created: ${body}"/>
+
+<setBody>
+    <!-- <simple>${env.NAMESPACE}: ${exchangeProperty.kafka-body}</simple> -->
+    <simple>you: ${exchangeProperty.kafka-body}</simple>
+</setBody>
+<toD uri="kafka:support.${env.NAMESPACE}.${exchangeProperty.discord-channel}"/>
+
+    </route>
+
+</routes>

@@ -1,0 +1,9 @@
+{
+    "user": $exchange.properties.user,
+    "text": $exchange.properties.text,
+    "source": {
+    	"name" :  "slack",
+    	"uname":  "slack",
+    	"room" :  $exchange.properties.channel
+    }
+}
