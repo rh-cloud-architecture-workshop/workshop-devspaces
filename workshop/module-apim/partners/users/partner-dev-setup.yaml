@@ -1,36 +1,39 @@
-apiVersion: capabilities.3scale.net/v1beta1
-kind: DeveloperAccount
-metadata:
-  name: mobile-developeraccount
-spec:
-  orgName: GlobexMobile
-  providerAccountRef:
-    name: 3scale-tenant-secret
-
----
-
 apiVersion: v1
 kind: Secret
 metadata:
-  name: mobileuser.secret
+  name: partnerz.secret
 type: Opaque
 stringData:
   password: openshift
+
 ---
+
+apiVersion: capabilities.3scale.net/v1beta1
+kind: DeveloperAccount
+metadata:
+  name: partner-developeraccount
+spec:
+  orgName: PartnerZ
+  providerAccountRef:
+    name: 3scale-tenant-secret
+
+---
+
+
 
 
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
-  name: jane.mobile
+  name: june.partnerz
 spec:
-  username: jane.mobile
-  email: jane@mobile.com
+  username: june.partnerz
+  email: june@partnerz.com
   passwordCredentialsRef:
-    name: mobileuser.secret
+    name: partnerz.secret
   role: admin
   developerAccountRef:
-    name: mobile-developeraccount
+    name: partner-developeraccount
   providerAccountRef:
     name: 3scale-tenant-secret
 
@@ -40,14 +43,14 @@ spec:
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
-  name: ron.mobile
+  name: jon.partnerz
 spec:
-  username: ron.mobile
-  email: ron@globex.com
+  username: jon.partnerz
+  email: jon@partnerz.com
   passwordCredentialsRef:
-    name: mobileuser.secret
+    name: partnerz.secret
   role: member
   developerAccountRef:
     name: partner-developeraccount
   providerAccountRef:
-    name: mobile-developeraccount
+    name: 3scale-tenant-secret

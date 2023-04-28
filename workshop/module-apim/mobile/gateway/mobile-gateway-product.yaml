@@ -12,7 +12,7 @@ spec:
       authentication:
         oidc:
           issuerType: "keycloak"
-          issuerEndpoint: "https://client-manager:<credentials>@<keycloak-url>/auth/realms/<realm-name>"
+          issuerEndpoint: "https://client-manager:<client-credentials>@<issuer-endpoint>"
           authenticationFlow:
             standardFlowEnabled: false
             implicitFlowEnabled: true
