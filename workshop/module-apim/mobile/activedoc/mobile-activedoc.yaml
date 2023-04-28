@@ -3,10 +3,10 @@ apiVersion: capabilities.3scale.net/v1beta1
 metadata:
   name: mobile-gateway-activedoc
 spec:
-  openapiRef:
-    url: "<replace-me>"
+  activeDocOpenAPIRef:
+    url: "<replaceme>"
   published: true
   name: mobile-gateway-activedoc
   providerAccountRef:
     name: 3scale-tenant-secret
-  productSystemName: globex-mobile-gateway-product
+  productSystemName: globex-mobile-gateway-product1
