@@ -10,4 +10,4 @@ components:
       cpuLimit: 500m
       memoryRequest: 256Mi
       memoryLimit: 1G
-      image: quay.io/devfile/universal-developer-image:ubi8-latest
+      image: quay.io/cloud-architecture-workshop/devspaces-image:06d7d01
