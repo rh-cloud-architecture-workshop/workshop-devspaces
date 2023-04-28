@@ -1,38 +1,10 @@
 openapi: 3.0.2
 info:
-    title: Globex Mobile API Gateway - V2.0
+    title: Globex Mobile API Gateway
     version: 1.0.0
     description: Globex APIs made accessible to global partners to view Globex' catalog and products
 paths:
-    /mobile/services/category/list:
-        summary: Get list of categories
-        description: Return the list of categories
-        get:
-            responses:
-                '200':
-                    content:
-                        application/json:
-                            schema:
-                                $ref: '#/components/schemas/category-list'
-                            examples:
-                                category-list:
-                                    value:
-                                        -
-                                            id: 1
-                                            category: clothing
-                                        -
-                                            id: 2
-                                            category: utensils
-                                        -
-                                            id: 3
-                                            category: bags
-                    description: Get list of categories
-            security:
-                -
-                    oidc-connect: []
-            summary: Get list of categories
-            description: Get list of categories
-    '/mobile/services/product/category/{category}':
+    '/mobile/services/product/category/{categories}':
         summary: Get products by category
         description: Return the list of products that belong to the given categories.
         get:
@@ -41,7 +13,9 @@ paths:
                     content:
                         application/json:
                             schema:
-                                $ref: '#/components/schemas/product-list'
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/product'
                             examples:
                                 clothing-products:
                                     value:
@@ -75,18 +49,42 @@ paths:
                                             quantity: 256
                                             desc: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. '
                     description: Product list found.
-            security:
-                -
-                    oidc-connect: []
             summary: Get products by category
         parameters:
             -
-                name: category
+                name: categories
                 description: Category name
                 schema:
                     type: string
                 in: path
                 required: true
+    /mobile/services/category/list:
+        summary: Get list of categories
+        description: Return the list of categories
+        get:
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            schema:
+                                type: array
+                                items:
+                                    $ref: '#/components/schemas/category'
+                            examples:
+                                category-list:
+                                    value:
+                                        -
+                                            id: 1
+                                            category: clothing
+                                        -
+                                            id: 2
+                                            category: utensils
+                                        -
+                                            id: 3
+                                            category: bags
+                    description: Get list of categories
+            summary: Get list of categories
+            description: Get list of categories
 components:
     schemas:
         category:
@@ -103,49 +101,6 @@ components:
             example:
                 id: 1
                 category: clothing
-        category-list:
-            description: List of categories
-            type: array
-            items:
-                $ref: '#/components/schemas/category'
-            example:
-                -
-                    id: 1
-                    category: clothing
-                -
-                    id: 2
-                    category: utensils
-                -
-                    id: 3
-                    category: bags
-        product-list:
-            description: List of Products for a given Category
-            type: array
-            items:
-                $ref: '#/components/schemas/product'
-            example:
-                -
-                    itemId: '329299'
-                    name: Quarkus T-shirt
-                    category: clothing
-                    price: 10
-                    quantity: 736
-                    desc: >-
-                        Our T-Shirt is an everyday essential! This short-sleeve heavyweight T-shirt is
-                        comfortable, economical and made to last. Designed with a traditional fit that runs
-                        true to size, he’ll show off his personality, humor and interests with an easy,
-                        relaxed style.
-                -
-                    itemId: '329199'
-                    name: Pronounced Kubernetes
-                    category: clothing
-                    price: 9
-                    quantity: 512
-                    desc: >-
-                        Our Men's Value T-Shirt is an everyday essential! This short-sleeve heavyweight
-                        T-shirt is comfortable, economical and made to last. Designed with a traditional fit
-                        that runs true to size, he’ll show off his personality, humor and interests with an
-                        easy, relaxed style.
         product:
             description: Definition of one product in the Globex Catalogue
             type: object
@@ -193,7 +148,9 @@ components:
             content:
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/product-list'
+                        type: array
+                        items:
+                            $ref: '#/components/schemas/product'
                     examples:
                         clothing:
                             value:
@@ -224,8 +181,10 @@ components:
             content:
                 application/json:
                     schema:
-                        $ref: '#/components/schemas/category-list'
                         description: Category List
+                        type: array
+                        items:
+                            $ref: '#/components/schemas/category'
                     examples:
                         basic:
                             value:
@@ -236,11 +195,3 @@ components:
                                     id: 52
                                     category: some text
             description: List of categries
-    securitySchemes:
-        oidc-connect:
-            openIdConnectUrl: >-
-                https://<sso-url>/auth/realms/globex-<usernmae>/.well-known/openid-configuration
-            type: openIdConnect
-            description: >-
-                OpenID Connect is used to authenticate API access. OpenID configuration can be retrieved at
-                https://<<sso-url>>/.well-known/openid-configuration
