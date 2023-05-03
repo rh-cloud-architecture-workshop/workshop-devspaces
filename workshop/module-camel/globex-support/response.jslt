@@ -1,0 +1,6 @@
+{
+    "agent": .agent,
+    "text": .text,
+    "sessionid" : .source.room,
+    "pdf":  .pdf
+}

@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+    <route id="process">
+        <from uri="direct:process"/>
+
+        <setProperty name="client">
+            <simple>${body}</simple>
+        </setProperty>
+
+        <log message="Initiating KAFKA processor for: ${exchangeProperty.client}"/>
+
+        <setProperty name="continue">
+            <simple>true</simple>
+        </setProperty>
+
+        <loop doWhile="true">
+            <simple>${exchangeProperty.continue}</simple>
+
+            <!-- <to uri="log:debug?showAll=true"/> -->
+
+            <pollEnrich>
+                <simple>kafka:support.${env.NAMESPACE}.${exchangeProperty.client}?autoOffsetReset=earliest</simple>
+            </pollEnrich>
+
+            <when>
+                <simple>${body} == 'done'</simple>        
+                <setProperty name="continue">
+                    <simple>false</simple>
+                </setProperty>
+            </when>
+
+            <log message="source is: ${header.source}"/>
+            <log message="got message: ${body}"/>
+
+            <aggregate strategyRef="myStrategy">
+                <correlationExpression>
+                    <constant>true</constant>
+                </correlationExpression>
+                <completionPredicate>
+                    <!-- <simple>${exchangeProperty.CamelTimerCounter} == 5</simple> -->
+                    <simple>${exchangeProperty.continue} == false</simple>        
+                </completionPredicate>
+                <log message="aggregation done: ${body}"/>
+
+                <setProperty name="source">
+                    <simple>${header.source}</simple>
+                </setProperty>
+                <to uri="pdf:create"/>
+                <log message="PDF created."/>
+                <to uri="direct:store-pdf"/>
+                <to uri="direct:get-shared-url"/>
+                <to uri="direct:share-transcript"/>
+            </aggregate>
+
+
+<!--             <when>
+                <simple>${body} == 'done'</simple>        
+                <setProperty name="continue">
+                    <simple>false</simple>
+                </setProperty>
+            </when> -->
+
+        </loop>
+
+        <log message="KAFKA processor done"/>
+
+    </route>
+
+
+
+    <route id="store-pdf">
+        <from uri="direct:store-pdf"/>
+
+        <setProperty name="store-key">
+            <!-- <simple>${date:now:yyyy-MM-dd_HH-mm-ssZ}.pdf</simple> -->
+            <simple>transcript_${date:now:yyyy-MM-dd_HH-mm-ss}.pdf</simple>
+        </setProperty>
+
+
+        <!-- File name for testing purposes -->
+        <setHeader name="CamelFileName">
+            <!-- <simple>${date:now:yyyy-MM-dd_HH-mm-ssZ}.pdf</simple> -->
+            <simple>${exchangeProperty.store-key}</simple>
+        </setHeader>
+
+        <setHeader name="CamelAwsS3Key">
+            <!-- <simple>${date:now:yyyy-MM-dd_HH-mm-ssZ}.pdf</simple> -->
+            <simple>${exchangeProperty.store-key}</simple>
+        </setHeader>
+    
+        <setHeader name="CamelAwsS3ContentType">
+            <simple>application/pdf</simple>
+        </setHeader>
+    
+        <toD uri="aws2-s3:pdf.bucket"/>
+        <log message="PDF stored"/>
+
+        <removeHeaders pattern="*"/>
+        <setHeader name="CamelAwsS3Key">
+            <simple>${exchangeProperty.store-key}</simple>
+        </setHeader>
+
+        <!-- <toD uri="aws2-s3:pdf.bucket?operation=createDownloadLink"/> -->
+        <!-- <to uri="direct:get-shared-url"/> -->
+        <!-- <log message="Download link: ${body}"/> -->
+    </route>
+
+
+    <route id="get-shared-url">
+        <from uri="direct:get-shared-url"/>
+
+        <setProperty name="minioserver">
+            <!-- <simple>minio-${env.NAMESPACE}.{{ocp.cluster}}</simple> -->
+            <simple>{{minio.url}}</simple>            
+        </setProperty>
+
+        <removeHeaders pattern="*"/>
+        <setHeader name="Authorization">
+            <simple>Bearer {{s3.webrpc.token}}</simple>
+        </setHeader>
+        <setHeader name="content-type">
+            <simple>application/json</simple>
+        </setHeader>
+        <setHeader name="User-Agent">
+            <simple>Mozilla/5.0</simple>
+        </setHeader>
+        <setBody>
+            <simple>
+{"id":1,"jsonrpc":"2.0","params":{"host":"${exchangeProperty.minioserver}","bucket":"pdf.bucket","object":"${exchangeProperty.store-key}","expiry":432000},"method":"web.PresignedGet"}
+            </simple>
+        </setBody>
+
+        <toD uri="https:${exchangeProperty.minioserver}/minio/webrpc"/>
+        <convertBodyTo type="String"/>
+        <log message="response: ${body}"/>
+<!--         <setBody>
+            <simple>${body.replace(\u0026,&amp;)}</simple>
+        </setBody> -->
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setBody>
+            <simple>http://${body.get(result).get(url)}</simple>
+        </setBody>
+
+        <log message="URL: ${body}"/>
+
+
+    </route>
+
+
+
+
+    <route id="share-transcript">
+        <from uri="direct:share-transcript"/>
+
+        <setProperty name="transcripturl">
+            <!-- <simple>${body}</simple> -->
+            <joor>java.net.URLEncoder.encode(message.getBody(String.class))</joor>
+        </setProperty>
+
+        <setProperty name="transcripturl-raw">
+            <simple>${body}</simple>
+            <!-- <joor>message.getBody(String.class)</joor> -->
+        </setProperty>
+
+<log message="transcripturl: ${exchangeProperty.transcripturl}"/>
+
+
+        <log message="context is: ${exchangeProperty.context}"/>
+
+        <setBody>
+            <simple>${exchangeProperty.context}</simple>
+        </setBody>
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setProperty name="source">
+            <simple>${body.get(source).get(uname)}</simple>
+        </setProperty>
+
+        <choice>
+            <when>
+                <simple>${exchangeProperty.source} == 'slack'</simple>
+                <to uri="language:simple:${body.replace(text, '&lt;${exchangeProperty.transcripturl}|PDF transcript&gt;' )}?transform=false"/>
+                <!-- <to uri="language:simple:${body.put(pdf, '${exchangeProperty.transcripturl}' )}?transform=false"/> -->
+            </when>
+            <otherwise>
+                <to uri="language:simple:${body.replace(text, 'PDF transcript' )}?transform=false"/>
+                <to uri="language:simple:${body.put(pdf, '${exchangeProperty.transcripturl-raw}' )}?transform=false"/>
+            </otherwise>
+        </choice>
+
+                        <!-- <to uri="language:simple:${body.replace(text, 'your session ended, conversation is now closed.' )}?transform=false"/> -->
+                        
+                        <!-- <to uri="language:simple:${body.replace(text, '${exchangeProperty.transcripturl}' )}?transform=false"/> -->
+                        
+                        <!-- <to uri="language:simple:${body.put(agent,'support' )}?transform=false"/> -->
+
+<!-- <setBody>
+    <simple>
+{
+    "user": "agent",
+    "text": "$body"
+    "room":
+}        
+    </simple>
+</setBody> -->
+
+    <marshal>
+        <json/>
+    </marshal>
+
+<log message="AMQP to send out: ${body}"/>
+
+        <toD uri="amqp:topic:support.${exchangeProperty.source}?connectionFactory=#myFactory"/>
+
+
+    </route>
+
+
+
+
+</routes>

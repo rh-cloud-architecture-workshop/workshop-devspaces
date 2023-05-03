@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+    <route id="support-message">
+        <from uri="platform-http:/support/message"/>
+        <setProperty name="clientid">
+            <!-- <constant>{{client.id}}</constant> -->
+            <simple>${env.NAMESPACE}</simple>
+        </setProperty>
+        <to uri="direct:request-session"/>
+    </route>
+
+    <route id="request-session">
+        <from uri="direct:request-session"/>
+        <convertBodyTo type="String"/>
+        <to uri="jslt:request.jslt?allowContextMapAll=true"/>
+        <toD uri="amqp:topic:{{broker.amqp.topic.clients}}${env.NAMESPACE}?disableReplyTo=true&amp;connectionFactory=#myFactory"/>
+    </route>
+
+    <!-- <route id="support-response"> -->
+        <!-- <from uri="amqp:topic:support.nodejs.{{client.id}}?connectionFactory=#myFactory"/> -->
+        <!-- <from uri="amqp:topic:support.nodejs.response?connectionFactory=#myFactory"/> -->
+<!--         <from uri="amqp:topic:support.nodejs.{{client.id}}?connectionFactory=#myFactory"/>
+
+    </route>
+ -->
+    <route id="support-response">
+        <from uri="direct:support-response"/>
+        <convertBodyTo type="String"/>
+        <log message="new message: ${body}"/>
+        <to uri="jslt:response.jslt?allowContextMapAll=true"/>
+        <to uri="{{client.callback.url}}"/>
+    </route>
+
+</routes>

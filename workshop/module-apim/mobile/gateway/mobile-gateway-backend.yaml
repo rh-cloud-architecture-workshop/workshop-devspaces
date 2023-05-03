@@ -1,7 +1,7 @@
 apiVersion: capabilities.3scale.net/v1beta1
 kind: Backend
 metadata:
-  name: globex-mobile-gateway-backend
+  name: globex-mobile-gateway-backend1
 spec:
   name: "Globex Mobile Gateway Backend"
   systemName: "globex-mobile-gateway-backend1"
