@@ -1,0 +1,2 @@
+oc set env deployments/globex-partner-web --overwrite \
+ GLOBEX_PARTNER_GATEWAY=https://globex-partner-gateway-product-3scale-user4-apicast-production.apps.cluster-54vds.54vds.sandbox664.opentlc.com:443 

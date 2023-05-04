@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: partnerz.secret
+  name: partner.secret
 type: Opaque
 stringData:
   password: openshift
@@ -13,7 +13,7 @@ kind: DeveloperAccount
 metadata:
   name: partner-developeraccount
 spec:
-  orgName: PartnerZ
+  orgName: Partner
   providerAccountRef:
     name: 3scale-tenant-secret
 
@@ -25,12 +25,12 @@ spec:
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
-  name: june.partnerz
+  name: admin.partner
 spec:
-  username: june.partnerz
-  email: june@partnerz.com
+  username: admin.partner
+  email: admin@partner.com
   passwordCredentialsRef:
-    name: partnerz.secret
+    name: partner.secret
   role: admin
   developerAccountRef:
     name: partner-developeraccount
@@ -43,12 +43,12 @@ spec:
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
-  name: jon.partnerz
+  name: user.partner
 spec:
-  username: jon.partnerz
-  email: jon@partnerz.com
+  username: user.partner
+  email: user@partner.com
   passwordCredentialsRef:
-    name: partnerz.secret
+    name: partner.secret
   role: member
   developerAccountRef:
     name: partner-developeraccount

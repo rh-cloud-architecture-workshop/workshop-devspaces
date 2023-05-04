@@ -4,8 +4,7 @@ metadata:
   name: partner-gateway-activedoc
 spec:
   activeDocOpenAPIRef:
-    secretRef:
-      name: partner-openapi-secret
+    url: "<replace-me>"
   published: true
   name: partner-gateway-activedoc
   providerAccountRef:
