@@ -23,10 +23,10 @@ spec:
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
-  name: mobile.admin
+  name: admin.mobile
 spec:
-  username: mobile.admin
-  email: mobile.admin@globex.com
+  username: admin.mobile
+  email: admin@mobile.com
   passwordCredentialsRef:
     name: mobileuser.secret
   role: admin
@@ -41,10 +41,10 @@ spec:
 apiVersion: capabilities.3scale.net/v1beta1
 kind: DeveloperUser
 metadata:
-  name: user.mobile
+  name: dev.mobile
 spec:
-  username: user.mobile
-  email: user.mobile@globex.com
+  username: dev.mobile
+  email: dev@globex.com
   passwordCredentialsRef:
     name: mobileuser.secret
   role: member
