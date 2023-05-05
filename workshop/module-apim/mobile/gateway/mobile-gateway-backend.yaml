@@ -5,7 +5,7 @@ metadata:
 spec:
   name: "Globex Mobile Gateway Backend"
   systemName: "globex-mobile-gateway-backend"
-  privateBaseURL: "<replaceme>"
+  privateBaseURL: "<replace-me>"
   providerAccountRef:
     name: 3scale-tenant-secret
   metrics:
