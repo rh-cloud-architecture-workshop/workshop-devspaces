@@ -421,7 +421,7 @@
         },
         "securitySchemes": {
             "openid-connect": {
-                "openIdConnectUrl": "https://sso.apps.cluster-54vds.54vds.sandbox664.opentlc.com/auth/realms/globex-user4/.well-known/openid-configuration",
+                "openIdConnectUrl": "<replace-me>",
                 "type": "openIdConnect",
                 "description": "OpenID Connect security scheme"
             }
