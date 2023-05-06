@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+
+
+    <route id="discord-create">
+        <from uri="direct:discord-create"/>
+        <removeHeaders pattern="*"/>
+        <setHeader name="Authorization">
+            <simple>Bot {{discord.token}}</simple>
+        </setHeader>
+        <setHeader name="Content-Type">
+            <simple>application/json</simple>
+        </setHeader>
+        <setProperty name="namespace">
+            <simple>${env.NAMESPACE}</simple>
+        </setProperty>
+        <setBody>
+            <simple>{
+    "name": "${exchangeProperty.in.get(source).get(name)}-${exchangeProperty.namespace.replace('globex-camel-','')}", 
+    "parent_id":"{{discord.guild.group}}", 
+    "type": 0
+}
+            </simple>
+        </setBody>
+        <to uri="https://discordapp.com/api/guilds/{{discord.guild.id}}/channels?connectionClose=true"/>
+        <log message="response: ${body}"/>
+        <to uri="log:discord-response?showAll=true"/>
+        <convertBodyTo type="String"/>
+
+        <to uri="jslt:classpath:cachetarget.jslt"/>
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setProperty name="target">
+            <simple>${body}</simple>
+        </setProperty>
+    </route>
+
+
+</routes>
