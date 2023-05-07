@@ -9,6 +9,65 @@
 
 
 
+    <route id="get-cache-entry">
+        <from uri="direct:get-cache-entry"/>
+
+        <setProperty name="key">
+            <simple>${exchangeProperty.in.get(source).get(room)}</simple>
+        </setProperty>
+        <to uri="direct:cache-get"/>
+
+        <to uri="log:deb?showHeaders=true"/>
+        <!-- <to uri="infinispan-embedded:default"/> -->
+
+        <choice>
+            <when>
+                <simple>${body} == null</simple>
+                <log message="no CACHE entry"/>
+
+                <to uri="direct:discord-create"/>
+
+                <!-- prepare cache value -->
+                <setProperty name="cache">
+                    <simple>${exchangeProperty.in}</simple>
+                </setProperty>
+                <to uri="language:simple:${exchangeProperty.cache.put(target,${exchangeProperty.target} )}?transform=false"/>
+
+
+
+                <!-- use Slack key to cache value -->
+                <setProperty name="key">
+                    <simple>${exchangeProperty.in.get(source).get(room)}</simple>
+                </setProperty>
+                <setBody>
+                    <simple>${exchangeProperty.cache}</simple>
+                </setBody>
+<log message="key: ${exchangeProperty.key}"/>
+<log message="val: ${body}"/>
+                <to uri="direct:cache-put"/>
+
+                <!-- use Discord key to cache value -->
+                <setProperty name="key">
+                    <simple>${exchangeProperty.cache.get(target).get(room)}</simple>
+                </setProperty>
+                <setBody>
+                    <simple>${exchangeProperty.cache}</simple>
+                </setBody>
+<log message="key: ${exchangeProperty.key}"/>
+<log message="val: ${body}"/>
+                <to uri="direct:cache-put"/>
+
+            </when>
+            <otherwise>
+                <log message="got CACHE entry"/>
+                <setProperty name="cache">
+                    <simple>${body}</simple>
+                </setProperty>
+                <log message="cache: ${body}"/>
+            </otherwise>
+        </choice>
+
+    </route>
 
     <route id="discord-create">
         <from uri="direct:discord-create"/>
