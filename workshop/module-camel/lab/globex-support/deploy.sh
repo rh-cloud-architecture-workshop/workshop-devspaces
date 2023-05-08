@@ -1,5 +1,5 @@
 kamel run --name globex-support \
-routes-globed.java \
+routesglobex.java \
 code/factory.java \
 code/gbxlistener.java \
 -p file:code/app.properties \
@@ -11,5 +11,3 @@ code/gbxlistener.java \
 -d camel-quarkus-jslt \
 -d camel-quarkus-http \
 -d mvn:io.quarkiverse.messaginghub:quarkus-pooled-jms:1.1.0 \
-
-
