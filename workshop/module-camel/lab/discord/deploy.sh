@@ -1,8 +1,9 @@
 kamel run --name discord \
-routes-cache.xml \
-routes-from-amq.xml \
-routes-from-discord-listener.xml \
-routes-from-discord-main.xml \
+routes-cache.yaml \
+routes-from-amq.yaml \
+routes-from-discord-main.yaml \
+code/routes-from-amq-support.xml \
+code/routes-from-discord-listener.xml \
 code/factory.java \
 code/gbxlistener.java \
 code/infinispan.java \
@@ -20,4 +21,3 @@ code/wsConfig.java \
 -d camel-quarkus-jslt \
 -d camel-quarkus-language \
 -d mvn:io.quarkiverse.messaginghub:quarkus-pooled-jms:1.1.0 \
-# --dev
