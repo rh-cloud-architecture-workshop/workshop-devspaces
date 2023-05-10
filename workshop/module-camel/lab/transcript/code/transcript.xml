@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            http://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+	<!-- Write your routes here, for example: -->
+    <route id="process">
+        <from uri="direct:process"/>                                                  <!-- 1 -->
+
+        <setProperty name="client">                                                   <!-- 2 -->
+            <simple>${body}</simple>
+        </setProperty>
+
+        <log message="Initiating KAFKA processor for: ${exchangeProperty.client}"/>   <!-- 3 -->
+
+        <setProperty name="continue">                                                 <!-- 4 -->
+            <simple>true</simple>
+        </setProperty>
+
+        <loop doWhile="true">                                                         <!-- 5 -->
+            <simple>${exchangeProperty.continue}</simple>
+
+            <pollEnrich>                                                              <!-- 6 -->
+                <simple>kafka:support.${env.NAMESPACE}.${exchangeProperty.client}?autoOffsetReset=earliest</simple>
+            </pollEnrich>
+
+            <when>                                                                    <!-- 7 -->
+                <simple>${body} == 'done'</simple>
+                <setProperty name="continue">
+                    <simple>false</simple>
+                </setProperty>
+            </when>
+
+            <log message="source is: ${header.source}"/>
+            <log message="got message: ${body}"/>
+
+            <aggregate strategyRef="myStrategy">                                       <!-- 8 -->
+                <correlationExpression>
+                    <constant>true</constant>
+                </correlationExpression>
+                <completionPredicate>
+                    <simple>${exchangeProperty.continue} == false</simple>
+                </completionPredicate>
+
+                <log message="aggregation done: ${body}"/>                             <!-- 9 -->
+
+                <to uri="pdf:create"/>                                                 <!-- 10 -->
+                <log message="PDF created."/>
+
+                <to uri="direct:store-pdf"/>                                           <!-- 11 -->
+                <to uri="direct:get-shared-url"/>                                      <!-- 12 -->
+                <to uri="direct:share-transcript"/>                                    <!-- 13 -->
+            </aggregate>
+        </loop>
+        <log message="KAFKA processor done"/>
+    </route>
+
+
+    <route id="store-pdf">
+        <from uri="direct:store-pdf"/>                                       <!-- 1 -->
+
+        <setProperty name="store-key">
+            <simple>transcript_${date:now:yyyy-MM-dd_HH-mm-ss}.pdf</simple>  <!-- 2 -->
+        </setProperty>
+
+        <setHeader name="CamelFileName">                                     <!-- 3 -->
+            <simple>${exchangeProperty.store-key}</simple>
+        </setHeader>
+
+        <setHeader name="CamelAwsS3Key">                                     <!-- 3 -->
+            <simple>${exchangeProperty.store-key}</simple>
+        </setHeader>
+
+        <setHeader name="CamelAwsS3ContentType">                             <!-- 3 -->
+            <simple>application/pdf</simple>
+        </setHeader>
+
+        <toD uri="aws2-s3:pdf.bucket"/>                                      <!-- 4 -->
+        <log message="PDF stored"/>
+    </route>
+
+
+    <route id="share-transcript">
+        <from uri="direct:share-transcript"/>                                       <!-- 1 -->
+
+        <log message="context is: ${exchangeProperty.context}"/>                    <!-- 2 -->
+
+        <setBody>
+            <simple>${exchangeProperty.context}</simple>                            <!-- 3 -->
+        </setBody>
+
+        <to uri="direct:recycle-context"/>                                          <!-- 4 -->
+
+        <log message="AMQP to send out: ${body}"/>
+
+        <toD uri="amqp:topic:support.${exchangeProperty.source}?connectionFactory=#myFactory"/>  <!-- 5 -->
+    </route>
+
+</routes>
