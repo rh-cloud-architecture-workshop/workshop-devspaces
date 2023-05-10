@@ -2,5 +2,9 @@
     "security.workspace.trust.startupPrompt": "never",
     "security.workspace.trust.enabled": false,
     "security.workspace.trust.banner": "never",
-    "security.workspace.trust.emptyWindow": false
+    "security.workspace.trust.emptyWindow": false,
+    "java.project.referencedLibraries": [
+      "lib/**/*.jar",
+      "/Users/bruno/Library/Application Support/Code/User/globalStorage/redhat.vscode-camelk/java-dependencies-3.19.0/dependencies/*.jar"
+    ]
   }

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- camel-k: language=xml -->
+
+<routes xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xmlns="http://camel.apache.org/schema/spring"
+        xsi:schemaLocation="
+            http://camel.apache.org/schema/spring
+            https://camel.apache.org/schema/spring/camel-spring.xsd">
+
+
+    <route id="get-shared-url">
+        <from uri="direct:get-shared-url"/>
+
+        <setProperty name="minioserver">
+            <simple>{{minio.url}}</simple>            
+        </setProperty>
+
+        <removeHeaders pattern="*"/>
+        <setHeader name="Authorization">
+            <simple>Bearer {{s3.webrpc.token}}</simple>
+        </setHeader>
+        <setHeader name="content-type">
+            <simple>application/json</simple>
+        </setHeader>
+        <setHeader name="User-Agent">
+            <simple>Mozilla/5.0</simple>
+        </setHeader>
+        <setBody>
+            <simple>
+{"id":1,"jsonrpc":"2.0","params":{"host":"${exchangeProperty.minioserver}","bucket":"pdf.bucket","object":"${exchangeProperty.store-key}","expiry":432000},"method":"web.PresignedGet"}
+            </simple>
+        </setBody>
+
+        <toD uri="https:${exchangeProperty.minioserver}/minio/webrpc"/>
+        <convertBodyTo type="String"/>
+        <log message="response: ${body}"/>
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setBody>
+            <simple>http://${body.get(result).get(url)}</simple>
+        </setBody>
+
+        <log message="URL: ${body}"/>
+
+        <setProperty name="transcripturl">
+            <joor>java.net.URLEncoder.encode(message.getBody(String.class))</joor>
+        </setProperty>
+        <setProperty name="transcripturl-raw">
+            <simple>${body}</simple>
+        </setProperty>
+        <log message="transcripturl: ${exchangeProperty.transcripturl}"/>
+    </route>
+
+
+    <route id="recycle-context">
+        <from uri="direct:recycle-context"/>
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setProperty name="source">
+            <simple>${body.get(source).get(uname)}</simple>
+        </setProperty>
+
+        <choice>
+            <when>
+                <simple>${exchangeProperty.source} == 'slack'</simple>
+                <to uri="language:simple:${body.replace(text, '&lt;${exchangeProperty.transcripturl}|PDF transcript&gt;')}?transform=false"/>
+            </when>
+            <otherwise>
+                <to uri="language:simple:${body.replace(text, 'PDF transcript' )}?transform=false"/>
+                <to uri="language:simple:${body.put(pdf, '${exchangeProperty.transcripturl-raw}' )}?transform=false"/>
+            </otherwise>
+        </choice>
+
+        <marshal>
+            <json/>
+        </marshal>
+
+    </route>
+
+
+</routes>
