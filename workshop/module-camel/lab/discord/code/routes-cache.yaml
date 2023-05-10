@@ -1,0 +1,56 @@
+# camel-k: language=yaml
+
+# Write your routes here, for example:
+- from:
+    uri: "direct:cache-put"             # <1>
+    steps:
+      - marshal:                        # <2>
+          json: {}
+      - removeHeaders:                  # <3>
+          pattern: '*'
+      - setHeader:                      # <4>
+          name: ${{{cache.operation}}}
+          simple: ${{{cache.put}}}
+      - setHeader:                      # <4>
+          name: ${{{cache.value}}}
+          simple: ${body}
+      - setHeader:                      # <4>
+          name: ${{{cache.key}}}
+          simple: ${exchangeProperty.key}
+      - to:
+           uri: "infinispan://default"  # <5>
+
+
+- from:
+    uri: "direct:cache-get"                # <1>
+    steps:
+      - removeHeaders:                     # <2>
+          pattern: '*'
+      - setHeader:                         # <3>
+          name: ${{{cache.operation}}}
+          simple: ${{{cache.get}}}
+      - setHeader:                         # <3>
+          name: ${{{cache.key}}}
+          simple: ${exchangeProperty.key}
+      - to:
+           uri: "infinispan://default"     # <4>
+      - when:
+          simple: ${body} != null          # <5>
+          steps:
+          - unmarshal:                     # <6>
+              json: {}
+
+
+- from:
+    uri: "direct:cache-remove"             # <1>
+    steps:
+      - removeHeaders:                     # <2>
+          pattern: '*'
+      - setHeader:                         # <3>
+          name: ${{{cache.operation}}}
+          simple: ${{{cache.remove}}}
+      - setHeader:                         # <3>
+          name: ${{{cache.key}}}
+          simple: ${exchangeProperty.key}
+      - to:
+           uri: "infinispan://default"     # <4>

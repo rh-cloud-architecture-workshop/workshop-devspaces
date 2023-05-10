@@ -1,0 +1,9 @@
+{
+    "user": .user,           // <1>
+    "text": .text,           // <1>
+    "source": {              // <2>
+    	"name" : "globex",   // <3>
+    	"uname": "globex."+$exchange.properties.clientid, // <4>
+    	"room" : .sessionid  // <5>
+    }
+}
