@@ -1,11 +1,15 @@
-1. SSO Issuer URL
+1. Client_manager credentials from SSO
 
 
-2. SSO Token URL
+2. Client ID for Mobile application 
 
 
-3. client_manager credentials from SSO
+3. Client Secret for Mobile application 
 
 
-4. OpenID URL for 3scale
+
+4. Client ID for Partner Portal
+
+
+5. Client Secret for Partner Portal
 
