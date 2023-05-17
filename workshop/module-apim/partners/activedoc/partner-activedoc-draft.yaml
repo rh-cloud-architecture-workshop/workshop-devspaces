@@ -2,7 +2,7 @@ openapi: 3.0.2
 info:
     title: Globex Partners API Gateway
     version: 1.0.0
-    description: Globex APIs made accessible to global partners to view Globex' catalog and products
+    description: Globex APIs made accessible to global partners to view Globex's catalog and products
 paths:
     /partners/services/product:
         summary: Get a paginated list of products
