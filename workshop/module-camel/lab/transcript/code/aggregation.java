@@ -8,13 +8,6 @@ import org.apache.camel.Processor;
 import org.apache.camel.PropertyInject;
 import org.apache.camel.builder.RouteBuilder;
 
-//PDFBox API
-// import org.apache.pdfbox.pdmodel.PDDocument;
-// import org.apache.pdfbox.pdmodel.PDPage;
-// import org.apache.pdfbox.pdmodel.PDPageContentStream;
-// import org.apache.pdfbox.pdmodel.font.PDType1Font;
-// import org.apache.pdfbox.pdmodel.common.PDRectangle;
-
 //Java API
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -35,8 +28,6 @@ public class aggregation extends RouteBuilder {
 
         return new AggregationStrategy() {
             public Exchange aggregate(Exchange oldExchange, Exchange newExchange) {
-
-System.out.println("props: "+newExchange.getProperties());
 
                 if (oldExchange == null) {
                     return newExchange;

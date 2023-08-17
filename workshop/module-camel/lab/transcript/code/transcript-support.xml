@@ -7,17 +7,49 @@
             http://camel.apache.org/schema/spring
             https://camel.apache.org/schema/spring/camel-spring.xsd">
 
+    <route id="get-s3-token">
+        <from uri="direct:get-s3-token"/>
+
+        <setProperty name="minioserver">
+            <simple>{{minio.url}}</simple>
+        </setProperty>
+        <removeHeaders pattern="*"/>
+        <setHeader name="Content-Type">
+            <simple>application/json</simple>
+        </setHeader>
+        <setHeader name="User-Agent">
+            <simple>Mozilla/5.0</simple>
+        </setHeader>
+        <setBody>
+            <simple>
+{"id":1,"jsonrpc":"2.0","params":{"username":"{{camel.component.aws2-s3.accessKey}}","password":"{{camel.component.aws2-s3.secretKey}}"},"method":"web.Login"}
+            </simple>
+        </setBody>
+        <toD uri="https:${exchangeProperty.minioserver}/minio/webrpc"/>
+        <convertBodyTo type="String"/>
+        <log message="response: ${body}"/>
+
+        <unmarshal>
+            <json/>
+        </unmarshal>
+
+        <setProperty name="s3-token">
+            <simple>${body.get(result).get(token)}</simple>
+        </setProperty>
+    </route>
 
     <route id="get-shared-url">
         <from uri="direct:get-shared-url"/>
 
+        <to uri="direct:get-s3-token"/>
+
         <setProperty name="minioserver">
-            <simple>{{minio.url}}</simple>            
+            <simple>{{minio.url}}</simple>
         </setProperty>
 
         <removeHeaders pattern="*"/>
         <setHeader name="Authorization">
-            <simple>Bearer {{s3.webrpc.token}}</simple>
+            <simple>Bearer ${exchangeProperty.s3-token}</simple>
         </setHeader>
         <setHeader name="content-type">
             <simple>application/json</simple>
@@ -40,7 +72,7 @@
         </unmarshal>
 
         <setBody>
-            <simple>http://${body.get(result).get(url)}</simple>
+            <simple>https://${body.get(result).get(url)}</simple>
         </setBody>
 
         <log message="URL: ${body}"/>
@@ -68,8 +100,8 @@
 
         <choice>
             <when>
-                <simple>${exchangeProperty.source} == 'slack'</simple>
-                <to uri="language:simple:${body.replace(text, '&lt;${exchangeProperty.transcripturl}|PDF transcript&gt;')}?transform=false"/>
+                <simple>${exchangeProperty.source} == 'rocketchat'</simple>
+                <to uri="language:simple:${body.replace(text, '[PDF transcript](${exchangeProperty.transcripturl-raw})')}?transform=false"/>
             </when>
             <otherwise>
                 <to uri="language:simple:${body.replace(text, 'PDF transcript' )}?transform=false"/>
