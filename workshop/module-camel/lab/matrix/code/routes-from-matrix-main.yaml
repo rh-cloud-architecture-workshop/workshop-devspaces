@@ -1,0 +1,114 @@
+# camel-k: language=yaml
+
+# Write your routes here, for example:
+- from:
+    uri: "direct:process-agent-message"
+    steps:
+      - to:
+          uri: "log:matrix?showBody=true"
+      - setProperty:
+         name: text
+         simple: ${body.get(text)}
+      - setProperty:
+          name: agent
+          simple: ${body.get(user)}
+      - setProperty:
+          name: key
+          simple: ${body.get(room)}
+      - to:
+          uri: "direct:cache-get"
+      - choice:
+          when:
+            - simple: ${body} != null 
+              steps:
+                - to:
+                    uri: "language:simple:${body.replace(text,${exchangeProperty.text})}"
+                    parameters:
+                      transform: false
+                - to:
+                    uri: "language:simple:${body.put(agent,${exchangeProperty.agent})}"
+                    parameters:
+                      transform: false
+                - setProperty:
+                    name: source
+                    simple: ${body.get(source).get(uname)}
+                - marshal:
+                    json: {}
+                - toD:
+                    uri: "amqp:topic:support.${exchangeProperty.source}"
+                    parameters:
+                      connectionFactory: "#myFactory"
+                - setBody:
+                    simple: '${exchangeProperty.agent}: ${exchangeProperty.text}'
+                - removeHeaders:
+                    pattern: "*"
+                - toD:
+                    uri: kafka:support.${env.NAMESPACE}.matrix${exchangeProperty.key.replace(":","-").replace("!","-")}
+          otherwise:
+            steps:
+              - log: "no cache entry, ignoring message from user: ${exchangeProperty.agent}"
+
+- from: 
+    uri: "direct:process-room-leave-event"
+    steps:
+      - log:
+          message: ${body}
+      - setProperty:
+          name: key
+          simple: ${body.get(room)}
+      - setProperty:
+          name: agent
+          simple: ${body.get(user)}
+      - to:
+          uri: "direct:cache-get"
+      - choice:
+          when:
+            - simple: ${body} != null
+              steps:
+                - to:
+                    uri: "language:simple:${body.replace(text,'your session ended, conversation is now closed.')}"
+                    parameters:
+                      transform: false
+                - to:
+                    uri: "language:simple:${body.put(agent,'support')}"
+                    parameters:
+                      transform: false
+                - setProperty:
+                    name: source
+                    simple: ${body.get(source).get(uname)}
+                - setProperty:
+                    name: key-rocketchat
+                    simple: ${body.get(source).get(room)}-${body.get(user)}
+                - setProperty:
+                    name: kafka-client
+                    simple: matrix${body.get(target).get(room).replace(":","-").replace("!","-")}
+                - marshal:
+                    json: {}
+                - setProperty:
+                    name: context
+                    simple: ${body}
+                - toD:
+                    uri: "amqp:topic:support.${exchangeProperty.source}"
+                    parameters:
+                      connectionFactory: "#myFactory"
+                - to:
+                    uri: "direct:cache-remove"
+                - setProperty:
+                    name: key
+                    simple: ${exchangeProperty.key-rocketchat}
+                - to:
+                    uri: "direct:cache-remove"
+                - setBody:
+                    simple: done
+                - setHeader:
+                    name: context
+                    simple: ${exchangeProperty.context}
+                - toD:
+                    uri: kafka:support.${env.NAMESPACE}.${exchangeProperty.kafka-client}
+                - setBody:
+                    simple: ${exchangeProperty.kafka-client}
+                - toD: 
+                    uri: "kafka:support.${env.NAMESPACE}.closed"
+          otherwise:
+            steps:
+            - log: no cache entry, ignoring message
