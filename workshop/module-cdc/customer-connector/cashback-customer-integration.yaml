@@ -38,16 +38,16 @@ spec:
       name: cashback-customer-connector.groovy
   traits:
     camel:
-      configuration:
-        properties:
-          - kafka.customer.topic.name = globex.updates.public.customer
-          - kafka.customer.consumer.group = customer-cashback-connector
-          - 'cashback-service.url = http://cashback-service:8080'
-          - 'camel.component.kafka.brokers = {{bootstrapServer}}'
-          - 'camel.component.kafka.securityprotocol = {{securityProtocol}}'
-          - 'camel.component.kafka.saslmechanism = {{saslMechanism}}'
-          - 'camel.component.kafka.sasljaasconfig = {{saslJaasConfig}} '
+      properties:
+        - kafka.customer.topic.name = globex.updates.public.customer
+        - kafka.customer.consumer.group = customer-cashback-connector
+        - 'cashback-service.url = http://cashback-service:8080'
+        - 'camel.component.kafka.brokers = {{bootstrapServer}}'
+        - 'camel.component.kafka.securityprotocol = {{securityProtocol}}'
+        - 'camel.component.kafka.saslmechanism = {{saslMechanism}}'
+        - 'camel.component.kafka.sasljaasconfig = {{saslJaasConfig}}'
+    container:
+      limitMemory: 512Mi
     mount:
-      configuration:
-        configs:
-          - 'secret:kafka-client-secret'
+      configs:
+        - 'secret:kafka-client-secret'
