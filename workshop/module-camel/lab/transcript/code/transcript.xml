@@ -39,7 +39,7 @@
             <log message="source is: ${header.source}"/>
             <log message="got message: ${body}"/>
 
-            <aggregate strategyRef="myStrategy">
+            <aggregate aggregationStrategy="myStrategy">
                 <correlationExpression>
                     <constant>true</constant>
                 </correlationExpression>
