@@ -8,24 +8,22 @@
             https://camel.apache.org/schema/spring/camel-spring.xsd">
 
 
-
     <route id="get-cache-entry">
         <from uri="direct:get-cache-entry"/>
 
         <setProperty name="key">
-            <simple>${exchangeProperty.in.get(source).get(room)}</simple>
+            <simple>${exchangeProperty.in.get(source).get(room)}-${exchangeProperty.in.get(user)}</simple>
         </setProperty>
         <to uri="direct:cache-get"/>
 
-        <to uri="log:deb?showHeaders=true"/>
-        <!-- <to uri="infinispan-embedded:default"/> -->
+        <to uri="log:deb?showHeaders=true&amp;showProperties=true"/>
 
         <choice>
             <when>
                 <simple>${body} == null</simple>
                 <log message="no CACHE entry"/>
 
-                <to uri="direct:discord-create"/>
+                <to uri="direct:matrix-create"/>
 
                 <!-- prepare cache value -->
                 <setProperty name="cache">
@@ -33,30 +31,23 @@
                 </setProperty>
                 <to uri="language:simple:${exchangeProperty.cache.put(target,${exchangeProperty.target} )}?transform=false"/>
 
-
-
-                <!-- use Slack key to cache value -->
-                <setProperty name="key">
-                    <simple>${exchangeProperty.in.get(source).get(room)}</simple>
-                </setProperty>
                 <setBody>
                     <simple>${exchangeProperty.cache}</simple>
                 </setBody>
-<log message="key: ${exchangeProperty.key}"/>
-<log message="val: ${body}"/>
+                <log message="key: ${exchangeProperty.key}"/>
+                <log message="val: ${body}"/>
                 <to uri="direct:cache-put"/>
 
-                <!-- use Discord key to cache value -->
+                <!-- use matrix key to cache value -->
                 <setProperty name="key">
                     <simple>${exchangeProperty.cache.get(target).get(room)}</simple>
                 </setProperty>
                 <setBody>
                     <simple>${exchangeProperty.cache}</simple>
                 </setBody>
-<log message="key: ${exchangeProperty.key}"/>
-<log message="val: ${body}"/>
+                <log message="key: ${exchangeProperty.key}"/>
+                <log message="val: ${body}"/>
                 <to uri="direct:cache-put"/>
-
             </when>
             <otherwise>
                 <log message="got CACHE entry"/>
@@ -66,34 +57,36 @@
                 <log message="cache: ${body}"/>
             </otherwise>
         </choice>
+   </route>
 
-    </route>
+    <route id="matrix-create">
+        <from uri="direct:matrix-create"/>
 
-    <route id="discord-create">
-        <from uri="direct:discord-create"/>
         <removeHeaders pattern="*"/>
         <setHeader name="Authorization">
-            <simple>Bot {{discord.token}}</simple>
+            <simple>Bearer {{matrix.access.token}}</simple>
         </setHeader>
         <setHeader name="Content-Type">
             <simple>application/json</simple>
         </setHeader>
+
         <setProperty name="namespace">
             <simple>${env.NAMESPACE}</simple>
         </setProperty>
+
         <setBody>
             <simple>{
-    "name": "${exchangeProperty.in.get(source).get(name)}-${exchangeProperty.namespace.replace('globex-camel-','')}", 
-    "parent_id":"{{discord.guild.group}}", 
-    "type": 0
-}
+    "name": "${exchangeProperty.in.get(source).get(name)}-${exchangeProperty.namespace.replace('globex-camel-','')}",
+    "preset":"public_chat",
+    "invite":["@${exchangeProperty.namespace.replace('globex-camel-','')}:{{matrix.server}}"],
+    "visibility": "private"}
             </simple>
         </setBody>
-        <to uri="https://discordapp.com/api/guilds/{{discord.guild.id}}/channels?connectionClose=true"/>
-        <log message="response: ${body}"/>
-        <to uri="log:discord-response?showAll=true"/>
-        <convertBodyTo type="String"/>
 
+        <to uri="{{matrix.server.url}}/_matrix/client/v3/createRoom?httpMethod=POST&amp;connectionClose=true"/>
+        <convertBodyTo type="String"/>
+        <log message="response: ${body}"/>
+        
         <to uri="jslt:classpath:cachetarget.jslt"/>
 
         <unmarshal>
@@ -101,9 +94,8 @@
         </unmarshal>
 
         <setProperty name="target">
-            <simple>${body}</simple>
+           <simple>${body}</simple>
         </setProperty>
     </route>
-
 
 </routes>

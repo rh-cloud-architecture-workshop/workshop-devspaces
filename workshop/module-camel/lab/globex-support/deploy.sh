@@ -1,7 +1,7 @@
 kamel run --name globex-support \
 routesglobex.java \
 code/factory.java \
-code/gbxlistener.java \
+code/globexlistener.java \
 -p file:code/app.properties \
 --config secret:client-amq \
 --resource file:request.jslt \

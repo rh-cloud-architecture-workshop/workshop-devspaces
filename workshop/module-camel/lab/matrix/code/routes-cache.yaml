@@ -1,0 +1,57 @@
+# camel-k: language=yaml
+
+- route:
+    from:
+      uri: "direct:cache-put"
+      steps:
+        - marshal:
+            json: {}
+        - removeHeaders:
+            pattern: '*'
+        - setHeader:
+            name: ${{{cache.operation}}}
+            simple: ${{{cache.put}}}
+        - setHeader:
+            name: ${{{cache.value}}}
+            simple: ${body}
+        - setHeader:
+            name: ${{{cache.key}}}
+            simple: ${exchangeProperty.key}
+        - to:
+            uri: "infinispan://default"
+
+- route:
+    from:
+      uri: "direct:cache-get"
+      steps:
+        - removeHeaders:
+            pattern: '*'
+        - setHeader:
+            name: ${{{cache.operation}}}
+            simple: ${{{cache.get}}}
+        - setHeader:
+            name: ${{{cache.key}}}
+            simple: ${exchangeProperty.key}
+        - to:
+            uri: "infinispan://default"
+        - when:
+            simple: ${body} != null
+            steps:
+            - unmarshal:
+                json: {}
+
+- route:
+    from:
+      uri: "direct:cache-remove"
+      steps:
+        - removeHeaders:
+            pattern: '*'
+        - setHeader:
+            name: ${{{cache.operation}}}
+            simple: ${{{cache.remove}}}
+        - setHeader:
+            name: ${{{cache.key}}}
+            simple: ${exchangeProperty.key}
+        - to:
+            uri: "infinispan://default"
+           

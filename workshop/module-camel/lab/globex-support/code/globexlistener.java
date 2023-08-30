@@ -2,7 +2,8 @@
 
 import org.apache.camel.builder.RouteBuilder;
 
-public class gbxlistener extends RouteBuilder {
+public class globexlistener extends RouteBuilder {
+
   @Override
   public void configure() throws Exception {
 

@@ -10,4 +10,4 @@ components:
       cpuLimit: 500m
       memoryRequest: 256Mi
       memoryLimit: 1G
-      image: quay.io/cloud-architecture-workshop/devspaces-image:06d7d01
+      image: quay.io/cloud-architecture-workshop/devspaces-image:0e90287
