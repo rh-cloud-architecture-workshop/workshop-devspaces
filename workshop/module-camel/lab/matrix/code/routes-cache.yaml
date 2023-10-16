@@ -6,6 +6,8 @@
       steps:
         - marshal:
             json: {}
+        - convertBodyTo:
+            type: String
         - removeHeaders:
             pattern: '*'
         - setHeader:
@@ -37,8 +39,8 @@
         - when:
             simple: ${body} != null
             steps:
-            - unmarshal:
-                json: {}
+              - unmarshal:
+                  json: {}
 
 - route:
     from:
