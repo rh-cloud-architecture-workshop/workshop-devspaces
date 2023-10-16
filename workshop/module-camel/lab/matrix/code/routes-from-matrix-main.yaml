@@ -88,7 +88,7 @@
                       json: {}
                   - setProperty:
                       name: context
-                      simple: ${body}
+                      simple: ${bodyAs(String)}
                   - toD:
                       uri: "amqp:topic:support.${exchangeProperty.source}"
                       parameters:
@@ -102,6 +102,8 @@
                       uri: "direct:cache-remove"
                   - setBody:
                       simple: done
+                  - removeHeaders:
+                      pattern: "*"
                   - setHeader:
                       name: context
                       simple: ${exchangeProperty.context}
