@@ -14,7 +14,7 @@ spec:
           issuerType: "keycloak"
           issuerEndpoint: "https://client-manager:<client-credentials>@<issuer-endpoint>"
           authenticationFlow:
-            standardFlowEnabled: false
+            standardFlowEnabled: true
             implicitFlowEnabled: true
             serviceAccountsEnabled: true
             directAccessGrantsEnabled: false
