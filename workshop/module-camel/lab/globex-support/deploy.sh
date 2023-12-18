@@ -11,3 +11,4 @@ code/globexlistener.java \
 -d camel-quarkus-jslt \
 -d camel-quarkus-http \
 -d mvn:io.quarkiverse.messaginghub:quarkus-pooled-jms:1.1.0 \
+--trait knative-service.enabled=false
